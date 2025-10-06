@@ -1,0 +1,10 @@
+# Node / web app basics
+node_modules/
+dist/
+build/
+.cache/
+.next/
+coverage/
+*.log
+.DS_Store
+.vscode/
