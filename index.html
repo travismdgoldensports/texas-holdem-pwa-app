@@ -21,55 +21,30 @@
   
 <style>
 :root {
-
   --bg:#061020;
-
   --felt:#0c5535;
-
   --felt2:#0a3d29;
-
   --felt-edge:#04311f;
-
   --panel:rgba(12,24,42,0.9);
-
   --panel-border:#244058;
-
   --accent:#ffd166;
-
   --accent-strong:#f7b733;
-
   --text:#f5f7ff;
-
   --muted:#9bb1d1;
-
   --danger:#ff6b6b;
-
   --chip-green:#38d996;
-
   --chip-red:#ef476f;
-
   --chip-blue:#4ea1ff;
-
   --chip-gold:#f7b733;
-
   --card-bg:#fff;
-
   --card-red:#e63946;
-
   --card-black:#212529;
-
   --glow:0 0 20px rgba(72,214,144,0.35);
-
   --radius:14px;
-
   --chip-scale:1;
-
   --card-scale-player:1;
-
   --card-scale-opponent:1;
-
   font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-
 }
 
 @media (max-width: 1366px){
@@ -83,7 +58,7 @@
 @media (max-width: 700px){
   :root{
     --chip-scale:0.5;
-    --card-scale-player:0.85;
+    --card-scale-player:0.92;
     --card-scale-opponent:0.6;
   }
 }
@@ -91,15 +66,10 @@
 *{box-sizing:border-box}
 
 body{
-
   margin:0;
-
   background:radial-gradient(circle at top,#0d1b3a,#060b16 70%);
-
   color:var(--text);
-
   min-height:100vh;
-
 }
 
 .app{
@@ -112,165 +82,98 @@ body{
 }
 
 header.top-bar{
-
   display:flex;
-
   justify-content:space-between;
-
   align-items:center;
-
   background:rgba(9,18,33,0.9);
-
   border:1px solid rgba(90,134,178,0.22);
-
   border-radius:var(--radius);
-
   padding:4px;
-
   box-shadow:0 12px 24px rgba(0,0,0,0.35);
-
 }
 
 header .title{
-
   font-size:20px;
-
   font-weight:700;
-
   letter-spacing:0.4px;
-
 }
 
 header .subtitle{
-
   font-size:12px;
-
   color:var(--muted);
-
 }
 
 header .meta{
-
   display:flex;
-
   flex-direction:column;
-
   align-items:flex-end;
-
   gap:6px;
-
 }
 
 header .meta .table-meta{
-
   font-size:12px;
-
   color:var(--muted);
-
   text-align:right;
-
 }
 
 header .top-left{
-
   display:flex;
-
   align-items:center;
-
   gap:12px;
-
 }
 
 header .title-group{
-
   display:flex;
-
   flex-direction:column;
-
   gap:2px;
-
 }
 
 .menu-button{
-
   display:none;
-
   align-items:center;
-
   gap:6px;
-
   padding:6px 12px;
-
   border-radius:999px;
-
   border:1px solid rgba(120,170,230,0.35);
-
   background:rgba(8,16,28,0.6);
-
   color:var(--text);
-
   font-size:13px;
-
   font-weight:600;
-
   letter-spacing:0.4px;
-
   cursor:pointer;
-
   transition:background 0.2s ease, transform 0.2s ease;
-
 }
 
 .menu-button:hover{
-
   transform:translateY(-1px);
-
 }
 
 .menu-button.active{
-
   background:rgba(68,120,200,0.35);
-
 }
 
 main.layout{
-
   display:grid;
-
   grid-template-columns:minmax(280px,330px) 1fr;
-
   grid-template-areas:'sidebar table';
-
   gap:18px;
-
   align-items:start;
-
 }
 
 .table-area{
-
   grid-area:table;
-
   display:flex;
-
   flex-direction:column;
   align-items: center;
   justify-content: center;
-
   gap:14px;
-
 }
 
 .sidebar{
-
   grid-area:sidebar;
-
   display:flex;
-
   flex-direction:column;
-
   gap:18px;
-
 }
 
 .sidebar-backdrop{display:none;}
@@ -343,47 +246,27 @@ main.layout{
 }
 
 .table{
-
   position:relative;
- 
-  border-radius:132px;
-
+  border-radius:50px;
   border:2px solid rgba(255,255,255,0.12);
-
   background:
-
     radial-gradient(80% 70% at 50% 50%, rgba(72,214,144,0.16), transparent 65%),
-
     radial-gradient(110% 100% at 50% 20%, rgba(255,255,255,0.12), transparent 70%),
-
     radial-gradient(120% 110% at 50% 50%, var(--felt), var(--felt2));
-
-  min-height:520px;
+  min-height:480px;
   max-width: 684px;
   width: 100%;
-
   box-shadow:inset 0 0 65px rgba(0,0,0,0.45),0 28px 50px rgba(0,0,0,0.35);
-
-  overflow:hidden;
-
   padding:26px;
-
 }
 
 .table::after{
-
   content:"";
-
   position:absolute;
-
   inset:14px;
-
   border:2px solid rgba(255,255,255,0.08);
-
-  border-radius:126px;
-
+  border-radius:44px;
   pointer-events:none;
-
 }
 
 .felt-label{
@@ -401,9 +284,9 @@ main.layout{
 }
 
 .pot-display{
-  font-weight:600;
-  font-size:18px;
-  color:var(--text);
+  font-size:inherit;
+  font-weight:inherit;
+  color:inherit;
 }
 
 .community-cards{
@@ -512,12 +395,29 @@ main.layout{
   text-align:center;
   font-size:calc(16px * var(--card-scale, 1));
   text-shadow:0 0 6px rgba(0,0,0,0.45);
+  padding:2px 4px;
+  border-radius:14px;
+  background:rgba(4,10,20,0.72);
+  -webkit-backdrop-filter:blur(4px);
+  backdrop-filter:blur(4px);
+  box-shadow:0 6px 16px rgba(0,0,0,0.45);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  white-space:nowrap;
 }
 
 .seat .chip-count{
   font-size:calc(14px * var(--card-scale, 1));
   color:var(--muted);
   text-shadow:0 0 6px rgba(0,0,0,0.45);
+  padding:2px 4px;
+  border-radius:14px;
+  background:rgba(4,10,20,0.68);
+  -webkit-backdrop-filter:blur(4px);
+  backdrop-filter:blur(4px);
+  box-shadow:0 6px 16px rgba(0,0,0,0.38);
 }
 
 .seat .status{
@@ -525,6 +425,24 @@ main.layout{
   min-height:calc(16px * var(--card-scale, 1));
   color:rgba(240,250,255,0.9);
   text-shadow:0 0 6px rgba(0,0,0,0.4);
+  padding:2px 4px;
+  border-radius:14px;
+  background:rgba(4,10,20,0.64);
+  -webkit-backdrop-filter:blur(4px);
+  backdrop-filter:blur(4px);
+  box-shadow:0 6px 16px rgba(0,0,0,0.32);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.seat .status:empty{
+  padding:0;
+  background:none;
+  -webkit-backdrop-filter:none;
+  box-shadow:none;
+  backdrop-filter:none;
+  min-height:0;
 }
 
 .seat.folded .card-row{display: none;}
@@ -549,15 +467,11 @@ main.layout{
 
 .dealer-badge{
 
-  position:absolute;
+  position:static;
 
-  top:-12px;
+  width:22px;
 
-  right:-12px;
-
-  width:32px;
-
-  height:32px;
+  height:22px;
 
   border-radius:50%;
 
@@ -567,7 +481,7 @@ main.layout{
 
   font-weight:700;
 
-  font-size:14px;
+  font-size:11px;
 
   display:flex;
 
@@ -575,7 +489,11 @@ main.layout{
 
   justify-content:center;
 
-  box-shadow:0 8px 16px rgba(0,0,0,0.35);
+  box-shadow:0 4px 10px rgba(0,0,0,0.3);
+
+  flex-shrink:0;
+
+  line-height:1;
 
 }
 
@@ -585,6 +503,10 @@ main.layout{
   position:absolute;
 
   inset:0;
+
+  overflow:hidden;
+
+  border-radius:inherit;
 
   pointer-events:none;
 
@@ -1066,6 +988,14 @@ button:not(:disabled):hover{
 
 }
 
+.raise-increment{
+
+  white-space:nowrap;
+
+  flex-shrink:0;
+
+}
+
 .slider-display{
 
   font-size:14px;
@@ -1279,19 +1209,13 @@ button:not(:disabled):hover{
 
       <button class="menu-button" id="sidebarToggle" type="button" aria-expanded="false" aria-controls="sidebarPanel">Menu</button>
 
-      <div class="title-group">
-
-        <div class="title">Texas Hold'em</div>
-
-      </div>
-
     </div>
 
     <div class="meta">
 
-      <div class="table-meta" id="headerInfo">Blinds: 25 / 50 · Players: 0 · Level 1</div>
+      <div class="table-meta" id="headerInfo">Blinds: 25 / 50 &bull; Level 1</div>
 
-      <div class="pot-display" id="potDisplay">Pot 0</div>
+      <div class="table-meta pot-display" id="potDisplay">Pot: 0</div>
 
     </div>
 
@@ -1309,7 +1233,7 @@ button:not(:disabled):hover{
 
           <div class="overlay-card">
 
-            <h2 id="overlayTitle">Welcome</h2>
+            <h2 id="overlayTitle">Welcome to the Texas Hold'em Tourney v1.1</h2>
 
             <p id="overlayMessage">Set up your table and start the tournament.</p>
 
@@ -1387,6 +1311,8 @@ button:not(:disabled):hover{
           <div class="slider-display">Wager: <span id="raiseValue">0</span></div>
 
           <button id="confirmRaise" class="primary">Confirm</button>
+
+          <button id="raiseIncrement" class="ghost raise-increment">+0</button>
 
         </div>
 
@@ -1679,6 +1605,8 @@ button:not(:disabled):hover{
 
     confirmRaise:document.getElementById('confirmRaise'),
 
+    raiseIncrement:document.getElementById('raiseIncrement'),
+
     nextHandButton:document.getElementById('nextHandButton'),
 
     startButton:document.getElementById('startButton'),
@@ -1863,7 +1791,11 @@ button:not(:disabled):hover{
 
     state.players.forEach(player => updateStackDisplay(player));
 
-    updatePotChips(state.pot || 0);
+    const collectedPot = chipDisplay.pot && typeof chipDisplay.pot.amount === 'number'
+      ? chipDisplay.pot.amount
+      : 0;
+
+    updatePotChips(collectedPot);
 
     renderPot();
 
@@ -2267,7 +2199,7 @@ button:not(:disabled):hover{
 
     if(!player || amount <= 0){
 
-      updatePotChips(state.pot);
+      updateBetDisplay(player);
 
       return;
 
@@ -2275,11 +2207,11 @@ button:not(:disabled):hover{
 
     const seatAnchor = chipDisplay.anchors.stack[player.seat];
 
-    const potAnchor = chipDisplay.anchors.pot;
+    const betAnchor = chipDisplay.anchors.bet[player.seat] || seatAnchor;
 
-    if(!seatAnchor || !potAnchor){
+    if(!seatAnchor || !betAnchor){
 
-      updatePotChips(state.pot);
+      updateBetDisplay(player);
 
       updateStackDisplay(player);
 
@@ -2287,47 +2219,59 @@ button:not(:disabled):hover{
 
     }
 
-    const kind = animationOptions && animationOptions.kind ? animationOptions.kind : 'bet';
+    const seatLayout = stackLayoutForSeat(player.seat);
 
-    if(kind === 'blind'){
+    const betLayout = betLayoutForSeat(player.seat);
 
-      const betAnchor = chipDisplay.anchors.bet[player.seat] || seatAnchor;
+    const chips = buildChipElements(amount);
 
-      const blindDuration = Math.max(280, Math.round(CHIP_ANIMATION_DURATION * 0.6));
+    if(!chips.length){
 
-      animateChipsBetween(seatAnchor, betAnchor, amount, {
+      updateBetDisplay(player);
 
-        duration: blindDuration,
-
-        onComplete: () => {
-
-          setTimeout(() => {
-
-            animateChipsBetween(betAnchor, potAnchor, amount, {
-
-              onComplete: () => updatePotChips(state.pot)
-
-            });
-
-          }, 140);
-
-        }
-
-      });
-
-      updateStackDisplay(player, blindDuration + CHIP_ANIMATION_DURATION + 140);
-
-    }else{
-
-      animateChipsBetween(seatAnchor, potAnchor, amount, {
-
-        onComplete: () => updatePotChips(state.pot)
-
-      });
-
-      updateStackDisplay(player, CHIP_ANIMATION_DURATION);
+      return;
 
     }
+
+    const duration = animationOptions && animationOptions.kind === 'blind'
+      ? Math.max(280, Math.round(CHIP_ANIMATION_DURATION * 0.6))
+      : CHIP_ANIMATION_DURATION;
+
+    const layer = elements.chipLayer;
+
+    chips.forEach((chip, idx) => {
+
+      chip.classList.add('chip-floating');
+
+      chip.style.transitionDuration = '0ms';
+
+      layer.appendChild(chip);
+
+      setChipPosition(chip, seatAnchor, idx, seatLayout.spread, seatLayout.verticalStep, seatLayout);
+
+    });
+
+    requestAnimationFrame(() => {
+
+      chips.forEach(chip => { chip.style.transitionDuration = `${duration}ms`; });
+
+      requestAnimationFrame(() => {
+
+        chips.forEach((chip, idx) => setChipPosition(chip, betAnchor, idx, betLayout.spread, betLayout.verticalStep, betLayout));
+
+      });
+
+    });
+
+    setTimeout(() => {
+
+      chips.forEach(chip => chip.remove());
+
+      updateBetDisplay(player);
+
+    }, duration + 60);
+
+    updateStackDisplay(player, duration);
 
   }
 
@@ -2533,11 +2477,17 @@ button:not(:disabled):hover{
 
     });
 
-    elements.raiseSlider.addEventListener('input', () => {
+    elements.raiseSlider.addEventListener('input', updateRaiseValueDisplay);
 
-      elements.raiseValue.textContent = formatChips(parseInt(elements.raiseSlider.value, 10) || 0);
+    if(elements.raiseIncrement){
 
-    });
+      elements.raiseIncrement.addEventListener('click', () => {
+
+        incrementRaiseByBigBlind();
+
+      });
+
+    }
 
     elements.nextHandButton.addEventListener('click', () => {
 
@@ -3358,11 +3308,89 @@ button:not(:disabled):hover{
 
 
 
+  function updateRaiseValueDisplay(){
+
+    if(!elements.raiseSlider || !elements.raiseValue){
+
+      return;
+
+    }
+
+    const slider = elements.raiseSlider;
+
+    const rawValue = parseInt(slider.value, 10) || 0;
+
+    elements.raiseValue.textContent = formatChips(rawValue);
+
+    if(elements.raiseIncrement){
+
+      const max = parseInt(slider.max, 10);
+
+      const baseDisabled = elements.raiseIncrement.dataset.incrementDisabled === 'true';
+
+      const atCap = Number.isFinite(max) && rawValue >= max;
+
+      elements.raiseIncrement.disabled = baseDisabled || atCap;
+
+    }
+
+  }
+
+
+
+  function incrementRaiseByBigBlind(){
+
+    if(!elements.raiseSlider){
+
+      return;
+
+    }
+
+    const slider = elements.raiseSlider;
+
+    const bigBlind = currentBlinds().big || 0;
+
+    if(bigBlind <= 0){
+
+      return;
+
+    }
+
+    const currentValue = parseInt(slider.value, 10) || 0;
+
+    const max = parseInt(slider.max, 10);
+
+    const min = parseInt(slider.min, 10);
+
+    const step = parseInt(slider.step, 10) || 1;
+
+    const upperBound = Number.isFinite(max) ? max : currentValue + bigBlind;
+
+    const lowerBound = Number.isFinite(min) ? min : 0;
+
+    const target = Math.min(upperBound, currentValue + bigBlind);
+
+    const aligned = Math.max(lowerBound, Math.min(upperBound, Math.ceil(target / step) * step));
+
+    slider.value = aligned;
+
+    updateRaiseValueDisplay();
+
+  }
+
+
+
   function setupRaiseSlider(){
 
     const player = state.players[state.currentPlayer];
 
-    if(!player) return;
+    if(!player || !elements.raiseSlider){
+
+      return;
+
+    }
+
+    const slider = elements.raiseSlider;
 
     const callAmount = Math.max(0, state.currentBet - player.bet);
 
@@ -3372,15 +3400,27 @@ button:not(:disabled):hover{
 
     const sliderMin = Math.max(minTotal, player.bet + callAmount);
 
-    elements.raiseSlider.min = sliderMin;
+    slider.min = sliderMin;
 
-    elements.raiseSlider.max = maxTotal;
+    slider.max = maxTotal;
 
-    elements.raiseSlider.step = Math.max(5, Math.floor(currentBlinds().big / 2));
+    const blinds = currentBlinds();
 
-    elements.raiseSlider.value = clamp(minTotal, sliderMin, maxTotal);
+    const bigBlind = blinds.big || 0;
 
-    elements.raiseValue.textContent = formatChips(parseInt(elements.raiseSlider.value, 10) || 0);
+    slider.step = Math.max(5, Math.floor(bigBlind / 2));
+
+    slider.value = clamp(minTotal, sliderMin, maxTotal);
+
+    if(elements.raiseIncrement){
+
+      elements.raiseIncrement.textContent = `+${formatChips(bigBlind)}`;
+
+      elements.raiseIncrement.dataset.incrementDisabled = bigBlind <= 0 ? 'true' : 'false';
+
+    }
+
+    updateRaiseValueDisplay();
 
   }
 
@@ -4535,6 +4575,13 @@ button:not(:disabled):hover{
 
         seatEl.appendChild(nameEl);
 
+        if(state.dealerIndex === idx){
+          const dealerBadge = document.createElement('div');
+          dealerBadge.className = 'dealer-badge';
+          dealerBadge.textContent = 'D';
+          nameEl.appendChild(dealerBadge);
+        }
+
         const chipEl = document.createElement('div');
 
         chipEl.className = 'chip-count';
@@ -4594,18 +4641,6 @@ button:not(:disabled):hover{
         }
 
         seatEl.appendChild(cardsRow);
-
-        if(state.dealerIndex === idx){
-
-          const dealerBadge = document.createElement('div');
-
-          dealerBadge.className = 'dealer-badge';
-
-          dealerBadge.textContent = 'D';
-
-          seatEl.appendChild(dealerBadge);
-
-        }
 
       }else if(seatsUsed.has(seat)){
 
@@ -4687,7 +4722,7 @@ button:not(:disabled):hover{
 
   function renderPot(){
 
-    elements.pot.textContent = `Pot ${formatChips(state.pot)}`;
+    elements.pot.textContent = `Pot: ${formatChips(state.pot)}`;
 
   }
 
@@ -4930,9 +4965,7 @@ button:not(:disabled):hover{
 
     const blinds = currentBlinds();
 
-    const active = state.players.filter(p => !p.out).length;
-
-    elements.headerInfo.textContent = `Blinds: ${formatChips(blinds.small)} / ${formatChips(blinds.big)} · Players: ${active} · Level ${state.blindLevel + 1}`;
+    elements.headerInfo.textContent = `Blinds: ${formatChips(blinds.small)} / ${formatChips(blinds.big)} \u2022 Level ${state.blindLevel + 1}`;
 
   }
 
@@ -5814,7 +5847,11 @@ button:not(:disabled):hover{
 
     });
 
-    updatePotChips(state.pot || 0);
+    const collectedPot = chipDisplay.pot && typeof chipDisplay.pot.amount === 'number'
+      ? chipDisplay.pot.amount
+      : 0;
+
+    updatePotChips(collectedPot);
 
     renderPot();
 
