@@ -1233,7 +1233,7 @@ button:not(:disabled):hover{
 
           <div class="overlay-card">
 
-            <h2 id="overlayTitle">Welcome to the Texas Hold'em Tourney v1.1</h2>
+            <h2 id="overlayTitle">Welcome to the GPC Texas Hold'em Tourney v1.2</h2>
 
             <p id="overlayMessage">Set up your table and start the tournament.</p>
 
@@ -1254,14 +1254,6 @@ button:not(:disabled):hover{
               <label for="handsPerLevel">Hands per blind level</label>
 
               <input type="number" id="handsPerLevel" min="2" max="12" step="1" value="5">
-
-              <div class="toggle-row">
-
-                <input type="checkbox" id="autoAdvance" checked>
-
-                <label for="autoAdvance">Auto advance to next hand</label>
-
-              </div>
 
               <button id="startButton" class="primary">Start Tournament</button>
 
@@ -1336,7 +1328,15 @@ button:not(:disabled):hover{
 
         <h2>Table Menu</h2>
 
-        <p class="menu-note">Use the welcome screen to configure your table.</p>
+        <p class="menu-note">Configure table options and utilities.</p>
+
+        <div class="toggle-row">
+
+          <input type="checkbox" id="autoAdvance">
+
+          <label for="autoAdvance">Auto advance to next hand</label>
+
+        </div>
 
         <button id="restartButton" class="ghost" disabled>Reset Table</button>
 
@@ -1377,6 +1377,8 @@ button:not(:disabled):hover{
   const SUITS = ['c','d','h','s'];
 
   const SUIT_SYMBOLS = { c:'♣', d:'♦', h:'♥', s:'♠' };
+
+  const SUIT_HIGH_CARD_RANK = { c:1, d:2, h:3, s:4 };
 
   const RANK_VALUES = { '2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'T':10,'J':11,'Q':12,'K':13,'A':14 };
 
@@ -1419,6 +1421,11 @@ button:not(:disabled):hover{
   const CHIP_DENOMINATIONS = [5000,1000,500,100,50,25,10,5,1];
 
   const CHIP_ANIMATION_DURATION = 520;
+  const POT_PAYOUT_ANIMATION_DELAY = 700;
+  const ROUND_TRANSITION_DELAY = 900;
+  const NEXT_HAND_DEFAULT_LABEL = 'Next Hand';
+  const DEAL_DRAW_DELAY = 650;
+  const DEAL_TIE_DELAY = 900;
 
 
   function getActiveChipDenominations(){
@@ -1518,6 +1525,7 @@ button:not(:disabled):hover{
     minRaise:0,
 
     awaitingAction:false,
+    championPending:null,
 
     blindLevel:0,
 
@@ -1525,7 +1533,7 @@ button:not(:disabled):hover{
 
     waitingForNextHand:false,
 
-    autoAdvance:true,
+    autoAdvance:false,
 
     eliminationOrder:[],
 
@@ -1588,6 +1596,8 @@ button:not(:disabled):hover{
     welcomeSetup:document.getElementById('welcomeSetup'),
 
     controlPanel:document.getElementById('controlPanel'),
+    controlHeader:document.querySelector('#controlPanel .control-header'),
+    controlButtons:document.querySelector('#controlPanel .control-buttons'),
 
     callInfo:document.getElementById('callInfo'),
 
@@ -2303,21 +2313,25 @@ button:not(:disabled):hover{
 
     }
 
-    animateChipsBetween(potAnchor, seatAnchor, amount, {
+    setTimeout(() => {
 
-      spread:8,
+      animateChipsBetween(potAnchor, seatAnchor, amount, {
 
-      verticalStep:4,
+        spread:8,
 
-      onComplete: () => {
+        verticalStep:4,
 
-        updateStackDisplay(player);
+        onComplete: () => {
 
-        updatePotChips(state.pot);
+          updateStackDisplay(player);
 
-      }
+          updatePotChips(state.pot);
 
-    });
+        }
+
+      });
+
+    }, POT_PAYOUT_ANIMATION_DELAY);
 
   }
 
@@ -2347,15 +2361,15 @@ button:not(:disabled):hover{
 
     }
 
-    elements.startButton.addEventListener('click', () => {
+    elements.startButton.addEventListener('click', async () => {
 
       if(state.tournamentActive){
 
-        showOverlay('Restart Tournament?','Starting again will reset this table.','Restart', () => {
+        showOverlay('Restart Tournament?','Starting again will reset this table.','Restart', async () => {
 
           hideOverlay();
 
-          startTournament(true);
+          await startTournament(true);
 
         });
 
@@ -2363,7 +2377,7 @@ button:not(:disabled):hover{
 
         hideOverlay();
 
-        startTournament();
+        await startTournament();
 
       }
 
@@ -2490,6 +2504,25 @@ button:not(:disabled):hover{
     }
 
     elements.nextHandButton.addEventListener('click', () => {
+
+      if(state.championPending){
+
+        const { message } = state.championPending;
+
+        state.championPending = null;
+
+        if(elements.nextHandButton){
+          elements.nextHandButton.classList.add('hidden');
+          elements.nextHandButton.textContent = NEXT_HAND_DEFAULT_LABEL;
+        }
+
+        showOverlay('Champion Crowned', message, 'Play Again', () => {
+          hideOverlay();
+          resetBoard();
+        });
+
+        return;
+      }
 
       if(state.waitingForNextHand){
 
@@ -2629,7 +2662,7 @@ button:not(:disabled):hover{
 
 
 
-  function startTournament(force=false){
+  async function startTournament(force=false){
 
     if(state.tournamentActive && !force){
 
@@ -2674,8 +2707,6 @@ button:not(:disabled):hover{
 
     state.stage = 'idle';
 
-    state.dealerIndex = players.length - 1;
-
     state.lastResult = null;
 
     state.log = [];
@@ -2686,11 +2717,154 @@ button:not(:disabled):hover{
 
     disableSetupInputs(true);
 
+    await determineInitialDealerWithHighCard();
+
     logEvent('Tournament is underway. Good luck!', true);
+    renderLog();
 
     startHand();
 
     handleResponsiveSidebar();
+
+  }
+
+
+
+  async function determineInitialDealerWithHighCard(){
+
+    const activePlayers = state.players.filter(player => !player.out);
+
+    if(activePlayers.length <= 1){
+
+      const onlyPlayer = activePlayers.length === 1 ? state.players.indexOf(activePlayers[0]) : 0;
+
+      const fallbackDealer = previousActiveIndex(onlyPlayer);
+
+      state.dealerIndex = fallbackDealer >= 0 ? fallbackDealer : onlyPlayer;
+
+      if(activePlayers.length === 1){
+
+        logEvent(`${activePlayers[0].name} takes the button by default.`, true);
+        renderLog();
+        await sleep(DEAL_TIE_DELAY);
+
+      }
+
+      return;
+
+    }
+
+    logEvent('Drawing high cards to determine the button.');
+    renderLog();
+    await sleep(DEAL_DRAW_DELAY);
+
+    const deck = buildDeck();
+
+    shuffleInPlace(deck);
+
+    let contenders = activePlayers.map(player => state.players.indexOf(player));
+
+    let round = 1;
+
+    while(contenders.length > 1){
+
+      const results = [];
+
+      for(const index of contenders){
+
+        if(deck.length === 0){
+
+          deck.push(...buildDeck());
+
+          shuffleInPlace(deck);
+
+        }
+
+        const card = deck.pop();
+
+        const player = state.players[index];
+
+        const suffix = round > 1 ? ' for the tiebreaker' : '';
+
+        logEvent(`${player.name} draws ${formatCard(card)}${suffix}.`);
+        renderLog();
+        await sleep(DEAL_DRAW_DELAY);
+
+        results.push({
+
+          index,
+
+          card,
+
+          rank:RANK_VALUES[card.rank] || 0,
+
+          suitRank:SUIT_HIGH_CARD_RANK[card.suit] || 0
+
+        });
+
+      }
+
+      results.sort((a, b) => {
+
+        if(b.rank !== a.rank){
+
+          return b.rank - a.rank;
+
+        }
+
+        return b.suitRank - a.suitRank;
+
+      });
+
+      const best = results[0];
+
+      const topRank = best.rank;
+
+      const tied = results.filter(entry => entry.rank === topRank);
+
+      if(tied.length === 1){
+
+        const winnerIdx = best.index;
+
+        const winner = state.players[winnerIdx];
+
+        logEvent(`${winner.name} wins the button draw with ${formatCard(best.card)}.`, true);
+        renderLog();
+        await sleep(DEAL_TIE_DELAY);
+
+        const dealerBefore = previousActiveIndex(winnerIdx);
+
+        state.dealerIndex = dealerBefore >= 0 ? dealerBefore : winnerIdx;
+
+        return;
+
+      }
+
+      const tiedNames = tied.map(entry => state.players[entry.index].name);
+
+      const rankLabel = best.card ? (best.card.rank === 'T' ? '10' : best.card.rank) : '';
+
+      logEvent(`Tie on ${rankLabel}s between ${joinWithAnd(tiedNames)}. Drawing again...`);
+      renderLog();
+      await sleep(DEAL_TIE_DELAY);
+
+      contenders = tied.map(entry => entry.index);
+
+      round += 1;
+
+    }
+
+    const winnerIdx = contenders[0];
+
+    const winner = state.players[winnerIdx];
+
+    logEvent(`${winner.name} wins the button draw.`, true);
+    renderLog();
+    await sleep(DEAL_TIE_DELAY);
+
+    const dealerBefore = previousActiveIndex(winnerIdx);
+
+    state.dealerIndex = dealerBefore >= 0 ? dealerBefore : winnerIdx;
 
   }
 
@@ -2749,6 +2923,7 @@ button:not(:disabled):hover{
     state.log = [];
 
     state.eliminationOrder = [];
+    state.championPending = null;
 
     state.smallBlindIndex = -1;
 
@@ -2771,8 +2946,12 @@ button:not(:disabled):hover{
     clearPendingTimeout();
 
     state.waitingForNextHand = false;
+    state.championPending = null;
 
-    elements.nextHandButton.classList.add('hidden');
+    if(elements.nextHandButton){
+      elements.nextHandButton.textContent = NEXT_HAND_DEFAULT_LABEL;
+      elements.nextHandButton.classList.add('hidden');
+    }
 
     state.community = [];
 
@@ -3168,19 +3347,33 @@ button:not(:disabled):hover{
 
     resetRoundBets();
 
-    renderAll();
+    const beginNextRound = () => {
 
-    const first = firstEligiblePlayerAfterDealer();
+      renderAll();
 
-    if(first === -1){
+      const first = firstEligiblePlayerAfterDealer();
 
-      advanceStage();
+      if(first === -1){
 
-      return;
+        advanceStage();
+
+        return;
+
+      }
+
+      scheduleNextTurn(first);
+
+    };
+
+    if(ROUND_TRANSITION_DELAY > 0){
+
+      setTimeout(beginNextRound, ROUND_TRANSITION_DELAY);
+
+    }else{
+
+      beginNextRound();
 
     }
-
-    scheduleNextTurn(first);
 
   }
 
@@ -3408,7 +3601,7 @@ button:not(:disabled):hover{
 
     const bigBlind = blinds.big || 0;
 
-    slider.step = Math.max(5, Math.floor(bigBlind / 2));
+    slider.step = 1;
 
     slider.value = clamp(minTotal, sliderMin, maxTotal);
 
@@ -3630,7 +3823,7 @@ button:not(:disabled):hover{
 
         state.pot = Math.max(0, state.pot - uncontestedAmount);
 
-        updatePotChips(state.pot);
+        updatePotChips(state.pot, POT_PAYOUT_ANIMATION_DELAY);
 
         renderPot();
 
@@ -3733,7 +3926,7 @@ button:not(:disabled):hover{
 
           state.pot = Math.max(0, state.pot - payout);
 
-          updatePotChips(state.pot);
+          updatePotChips(state.pot, POT_PAYOUT_ANIMATION_DELAY);
 
           renderPot();
 
@@ -3856,7 +4049,7 @@ button:not(:disabled):hover{
     });
 
     markEliminations();
-
+    setControlPanelForHandComplete();
     renderAll();
 
     updateHeader();
@@ -3889,6 +4082,49 @@ button:not(:disabled):hover{
 
   }
 
+  function setControlPanelForHandComplete(){
+
+    if(!elements.controlPanel){
+      return;
+    }
+
+    if(elements.controlPanel.classList.contains('control-panel-disabled')){
+      elements.controlPanel.classList.remove('control-panel-disabled');
+    }
+
+    if(elements.controlHeader){
+      elements.controlHeader.classList.add('hidden');
+    }
+
+    if(elements.controlButtons){
+      elements.controlButtons.classList.add('hidden');
+    }
+
+    if(elements.foldBtn){
+      elements.foldBtn.classList.add('hidden');
+    }
+
+    if(elements.checkCallBtn){
+      elements.checkCallBtn.classList.add('hidden');
+    }
+
+    if(elements.raiseBtn){
+      elements.raiseBtn.classList.add('hidden');
+    }
+
+    if(elements.raiseControls){
+      elements.raiseControls.classList.add('hidden');
+    }
+
+    if(elements.callInfo){
+      elements.callInfo.textContent = '';
+    }
+
+    if(elements.nextHandButton){
+      elements.nextHandButton.classList.remove('hidden');
+    }
+  }
+
 
 
   function checkForChampion(){
@@ -3907,15 +4143,21 @@ button:not(:disabled):hover{
 
       elements.restartButton.disabled = true;
 
-      const message = champ.isHuman ? `${champ.name} takes down the tournament and claims all the chips.` : `${champ.name} takes the final pot.`;
+      const message = champ.isHuman
+        ? `${champ.name} takes down the tournament and claims all the chips.`
+        : `${champ.name} takes the final pot.`;
 
-      showOverlay('Champion Crowned', message, 'Play Again', () => {
+      state.championPending = { message };
+      clearPendingTimeout();
 
-        hideOverlay();
+      if(elements.callInfo){
+        elements.callInfo.textContent = 'Tournament complete';
+      }
 
-        resetBoard();
-
-      });
+      if(elements.nextHandButton){
+        elements.nextHandButton.textContent = 'View Champion';
+        elements.nextHandButton.classList.remove('hidden');
+      }
 
       return true;
 
@@ -4119,7 +4361,19 @@ button:not(:disabled):hover{
 
     target = Math.max(player.bet + callAmount, target);
 
-    return Math.max(target, player.bet + Math.min(player.chips, Math.max(currentBlinds().big, 20)));
+    target = Math.max(target, player.bet + Math.min(player.chips, Math.max(currentBlinds().big, 20)));
+
+    const bigBlind = currentBlinds().big || 0;
+    if(bigBlind > 0){
+      const maxTotal = player.bet + player.chips;
+      const minTotal = player.bet + callAmount;
+      const rounded = Math.ceil(target / bigBlind) * bigBlind;
+      if(rounded <= maxTotal && rounded >= minTotal){
+        target = rounded;
+      }
+    }
+
+    return target;
 
   }
 
@@ -4209,6 +4463,30 @@ button:not(:disabled):hover{
 
     elements.controlPanel.classList.remove('control-panel-disabled');
 
+    if(elements.controlHeader){
+      elements.controlHeader.classList.remove('hidden');
+    }
+
+    if(elements.controlButtons){
+      elements.controlButtons.classList.remove('hidden');
+    }
+
+    if(elements.nextHandButton){
+      elements.nextHandButton.classList.add('hidden');
+    }
+
+    if(elements.foldBtn){
+      elements.foldBtn.classList.remove('hidden');
+    }
+
+    if(elements.checkCallBtn){
+      elements.checkCallBtn.classList.remove('hidden');
+    }
+
+    if(elements.raiseBtn){
+      elements.raiseBtn.classList.remove('hidden');
+    }
+
     const callAmount = Math.max(0, state.currentBet - player.bet);
 
     const toCall = Math.min(player.chips, callAmount);
@@ -4239,6 +4517,45 @@ button:not(:disabled):hover{
 
   function disableControls(){
 
+    const waitingForNext = state.waitingForNextHand;
+
+    if(elements.controlHeader){
+      elements.controlHeader.classList.toggle('hidden', waitingForNext);
+    }
+
+    if(elements.controlButtons){
+      elements.controlButtons.classList.toggle('hidden', waitingForNext);
+    }
+
+    if(elements.nextHandButton){
+      elements.nextHandButton.classList.toggle('hidden', !waitingForNext);
+    }
+
+    if(waitingForNext){
+      if(elements.foldBtn){
+        elements.foldBtn.classList.add('hidden');
+      }
+      if(elements.checkCallBtn){
+        elements.checkCallBtn.classList.add('hidden');
+      }
+      if(elements.raiseBtn){
+        elements.raiseBtn.classList.add('hidden');
+      }
+    }else{
+      if(elements.foldBtn){
+        elements.foldBtn.classList.remove('hidden');
+      }
+      if(elements.checkCallBtn){
+        elements.checkCallBtn.classList.remove('hidden');
+      }
+      if(elements.raiseBtn){
+        elements.raiseBtn.classList.remove('hidden');
+      }
+      if(elements.nextHandButton){
+        elements.nextHandButton.classList.add('hidden');
+      }
+    }
+
     elements.foldBtn.disabled = true;
 
     elements.checkCallBtn.disabled = true;
@@ -4247,9 +4564,15 @@ button:not(:disabled):hover{
 
     elements.raiseControls.classList.add('hidden');
 
-    elements.controlPanel.classList.add('control-panel-disabled');
+    if(elements.callInfo){
+      elements.callInfo.textContent = state.waitingForNextHand ? 'Waiting for next hand' : 'Opponent acting';
+    }
 
-    elements.callInfo.textContent = state.waitingForNextHand ? 'Waiting for next hand' : 'Opponent acting';
+    if(state.waitingForNextHand){
+      elements.controlPanel.classList.remove('control-panel-disabled');
+    }else{
+      elements.controlPanel.classList.add('control-panel-disabled');
+    }
 
   }
 
@@ -4348,6 +4671,32 @@ button:not(:disabled):hover{
     }
 
     return order;
+
+  }
+
+
+
+  function previousActiveIndex(start){
+
+    if(!state.players.length) return -1;
+
+    let idx = typeof start === 'number' ? start : 0;
+
+    for(let i=1; i<=state.players.length; i++){
+
+      const current = (idx - i + state.players.length) % state.players.length;
+
+      const player = state.players[current];
+
+      if(!player.out){
+
+        return current;
+
+      }
+
+    }
+
+    return -1;
 
   }
 
@@ -5038,7 +5387,7 @@ button:not(:disabled):hover{
       elements.autoAdvance.checked = !!state.autoAdvance;
     }
 
-    elements.overlayTitle.textContent = 'Welcome';
+    elements.overlayTitle.textContent = 'Welcome to the GPC Texas Holdem Tourney v1.2';
     elements.overlayMessage.textContent = 'Set up your table and start the tournament.';
     toggleSidebar(false);
     elements.overlay.classList.remove('hidden');
@@ -5067,8 +5416,6 @@ button:not(:disabled):hover{
     elements.chipsInput.disabled = flag;
 
     elements.handsInput.disabled = flag;
-
-    elements.autoAdvance.disabled = flag;
 
   }
 
@@ -6255,21 +6602,25 @@ button:not(:disabled):hover{
 
     }
 
-    animateChipsBetween(potAnchor, seatAnchor, amount, {
+    setTimeout(() => {
 
-      fromLayout: potLayoutOptions(),
+      animateChipsBetween(potAnchor, seatAnchor, amount, {
 
-      toLayout: stackLayoutForSeat(player.seat),
+        fromLayout: potLayoutOptions(),
 
-      onComplete: () => {
+        toLayout: stackLayoutForSeat(player.seat),
 
-        updateStackDisplay(player);
+        onComplete: () => {
 
-        updatePotChips(state.pot);
+          updateStackDisplay(player);
 
-      }
+          updatePotChips(state.pot);
 
-    });
+        }
+
+      });
+
+    }, POT_PAYOUT_ANIMATION_DELAY);
 
   }
 
@@ -6371,11 +6722,17 @@ button:not(:disabled):hover{
 
   resetRoundBets = function(){
 
-    collectBetDisplaysIntoPot();
+    const sweepDelay = 800;
+
+    setTimeout(() => {
+      collectBetDisplaysIntoPot({
+        onComplete: () => {
+          state.players.forEach(player => updateBetDisplay(player));
+        }
+      });
+    }, sweepDelay);
 
     originalResetRoundBets();
-
-    state.players.forEach(player => updateBetDisplay(player));
 
   };
 
@@ -6384,9 +6741,10 @@ button:not(:disabled):hover{
   const originalHandleSingleRemaining = handleSingleRemaining;
 
   handleSingleRemaining = function(forcedWinner){
-
-    collectBetDisplaysIntoPot({ immediate:true });
-
+    const contenders = state.players.filter(player => !player.folded && !player.out);
+    if(contenders.length <= 1){
+      collectBetDisplaysIntoPot({ immediate:true });
+    }
     return originalHandleSingleRemaining(forcedWinner);
 
   };
