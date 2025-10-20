@@ -1233,7 +1233,7 @@ button:not(:disabled):hover{
 
           <div class="overlay-card">
 
-            <h2 id="overlayTitle">Welcome to the GPC Texas Hold'em Tourney v1.2</h2>
+            <h2 id="overlayTitle">Welcome to the GPC Texas Hold'em Tourney v1.3</h2>
 
             <p id="overlayMessage">Set up your table and start the tournament.</p>
 
@@ -1241,11 +1241,11 @@ button:not(:disabled):hover{
 
               <label for="playerName">Player name</label>
 
-              <input type="text" id="playerName" maxlength="18" value="You" placeholder="Enter your name">
+              <input type="text" id="playerName" maxlength="18" value="You" placeholder="Enter your name" autocomplete="given-name">
 
-              <label for="opponentCount">Opponents <span class="value-pill" id="opponentCountLabel">5</span></label>
+              <label for="opponentCount">Opponents <span class="value-pill" id="opponentCountLabel">7</span></label>
 
-              <input type="range" id="opponentCount" min="1" max="7" value="5">
+              <input type="range" id="opponentCount" min="1" max="7" value="7">
 
               <label for="startingChips">Starting chips</label>
 
@@ -1495,7 +1495,7 @@ button:not(:disabled):hover{
 
   const settings = {
     playerName:'You',
-    opponents:5,
+    opponents:7,
     startingChips:5000,
     handsPerLevel:5
   };
@@ -3395,6 +3395,8 @@ button:not(:disabled):hover{
 
         player.hasActed = false;
 
+        player.lastAction = 'Waiting';
+
       }
 
     });
@@ -4179,7 +4181,7 @@ button:not(:disabled):hover{
 
         player.folded = true;
 
-        player.cards = [];
+        player.showCards = true;
 
         const place = state.players.length - state.eliminationOrder.length;
 
@@ -4900,7 +4902,7 @@ button:not(:disabled):hover{
 
         seatEl.classList.add(player.isHuman ? 'human' : 'ai');
 
-        if(player.folded) seatEl.classList.add('folded');
+        if(player.folded && !player.out) seatEl.classList.add('folded');
 
         if(player.allIn) seatEl.classList.add('all-in');
 
@@ -4981,7 +4983,7 @@ button:not(:disabled):hover{
 
           });
 
-        }else{
+        }else if(!player.out){
 
           cardsRow.appendChild(renderCard(null));
 
@@ -5387,7 +5389,7 @@ button:not(:disabled):hover{
       elements.autoAdvance.checked = !!state.autoAdvance;
     }
 
-    elements.overlayTitle.textContent = 'Welcome to the GPC Texas Holdem Tourney v1.2';
+    elements.overlayTitle.textContent = 'Welcome to the GPC Texas Holdem Tourney v1.3';
     elements.overlayMessage.textContent = 'Set up your table and start the tournament.';
     toggleSidebar(false);
     elements.overlay.classList.remove('hidden');
@@ -5836,21 +5838,21 @@ button:not(:disabled):hover{
 
   const STACK_LAYOUTS = [
 
-    { spread:11, verticalStep:5, perRow:3, stackSize:18, stackOffset:26, baseLift:8, stackDirection:'symmetric', orientation:'up' },
+    { spread:11, verticalStep:5, perRow:3, stackSize:18, stackOffset:26, baseLift:8, stackDirection:'symmetric', orientation:'up', maxPerRow:6, minPerRow:2, preferredRows:4, rowsPerStack:6 },
 
-    { spread:9, verticalStep:5, perRow:3, stackSize:18, stackOffset:24, baseLift:6, stackDirection:-1, orientation:'up' },
+    { spread:9, verticalStep:5, perRow:3, stackSize:18, stackOffset:24, baseLift:6, stackDirection:-1, orientation:'up', maxPerRow:6, minPerRow:2, preferredRows:4, rowsPerStack:6 },
 
-    { spread:9, verticalStep:5, perRow:3, stackSize:18, stackOffset:22, baseLift:5, stackDirection:-1, orientation:'up' },
+    { spread:9, verticalStep:5, perRow:3, stackSize:18, stackOffset:22, baseLift:5, stackDirection:-1, orientation:'up', maxPerRow:6, minPerRow:2, preferredRows:4, rowsPerStack:6 },
 
-    { spread:9, verticalStep:5, perRow:3, stackSize:18, stackOffset:22, baseLift:4, stackDirection:-1, orientation:'up' },
+    { spread:9, verticalStep:5, perRow:3, stackSize:18, stackOffset:22, baseLift:4, stackDirection:-1, orientation:'up', maxPerRow:6, minPerRow:2, preferredRows:4, rowsPerStack:6 },
 
-    { spread:11, verticalStep:5, perRow:3, stackSize:18, stackOffset:26, baseLift:8, stackDirection:'symmetric', orientation:'up' },
+    { spread:11, verticalStep:5, perRow:3, stackSize:18, stackOffset:26, baseLift:8, stackDirection:'symmetric', orientation:'up', maxPerRow:6, minPerRow:2, preferredRows:4, rowsPerStack:6 },
 
-    { spread:9, verticalStep:5, perRow:3, stackSize:18, stackOffset:22, baseLift:4, stackDirection:1, orientation:'up' },
+    { spread:9, verticalStep:5, perRow:3, stackSize:18, stackOffset:22, baseLift:4, stackDirection:1, orientation:'up', maxPerRow:6, minPerRow:2, preferredRows:4, rowsPerStack:6 },
 
-    { spread:9, verticalStep:5, perRow:3, stackSize:18, stackOffset:22, baseLift:5, stackDirection:1, orientation:'up' },
+    { spread:9, verticalStep:5, perRow:3, stackSize:18, stackOffset:22, baseLift:5, stackDirection:1, orientation:'up', maxPerRow:6, minPerRow:2, preferredRows:4, rowsPerStack:6 },
 
-    { spread:9, verticalStep:5, perRow:3, stackSize:18, stackOffset:24, baseLift:6, stackDirection:1, orientation:'up' }
+    { spread:9, verticalStep:5, perRow:3, stackSize:18, stackOffset:24, baseLift:6, stackDirection:1, orientation:'up', maxPerRow:6, minPerRow:2, preferredRows:4, rowsPerStack:6 }
 
   ];
 
@@ -5860,7 +5862,50 @@ button:not(:disabled):hover{
 
     const layout = STACK_LAYOUTS[seat];
 
-    return layout ? { ...layout } : { ...STACK_LAYOUTS[0] };
+    if(!layout){
+      return { ...STACK_LAYOUTS[0] };
+    }
+
+    return { ...layout };
+
+  }
+
+
+
+  function adaptStackLayoutForCount(layout, chipCount){
+
+    const result = { ...layout };
+
+    const minPerRow = Math.max(1, result.minPerRow ?? 3);
+
+    const maxPerRow = Math.max(minPerRow, result.maxPerRow ?? (result.perRow ?? 4));
+
+    const preferredRows = Math.max(1, result.preferredRows ?? 4);
+
+    const rowsPerStack = Math.max(preferredRows, result.rowsPerStack ?? preferredRows);
+
+    if(chipCount <= 1){
+      result.perRow = Math.min(1, maxPerRow);
+      result.stackSize = 1;
+      return result;
+    }
+
+    let perRow = Math.max(minPerRow, result.perRow ?? minPerRow);
+
+    if(chipCount > perRow){
+      const estimatedPerRow = Math.ceil(chipCount / preferredRows);
+      perRow = Math.max(minPerRow, Math.min(maxPerRow, estimatedPerRow));
+    }
+
+    const rowsNeeded = Math.max(1, Math.ceil(chipCount / perRow));
+
+    result.perRow = perRow;
+
+    const targetRowsPerStack = Math.max(rowsNeeded, rowsPerStack);
+
+    result.stackSize = perRow * targetRowsPerStack;
+
+    return result;
 
   }
 
@@ -6144,7 +6189,9 @@ button:not(:disabled):hover{
 
       if(store && store.chips && store.chips.length && chipDisplay.anchors.stack[seat]){
 
-        layoutChipGroup(chipDisplay.anchors.stack[seat], store.chips, stackLayoutForSeat(seat));
+        const layout = adaptStackLayoutForCount(stackLayoutForSeat(seat), store.chips.length);
+
+        layoutChipGroup(chipDisplay.anchors.stack[seat], store.chips, layout);
 
       }
 
@@ -6226,8 +6273,6 @@ button:not(:disabled):hover{
 
     }
 
-    const layout = stackLayoutForSeat(seat);
-
     const current = chipDisplay.stacks[seat];
 
     const targetNow = Math.max(0, Math.round(player.chips || 0));
@@ -6253,6 +6298,8 @@ button:not(:disabled):hover{
       const chips = buildChipElements(targetAmount);
 
       chips.forEach(chip => elements.chipLayer.appendChild(chip));
+
+      const layout = adaptStackLayoutForCount(stackLayoutForSeat(seat), chips.length);
 
       layoutChipGroup(anchor, chips, layout);
 
